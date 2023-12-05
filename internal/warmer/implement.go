@@ -51,7 +51,7 @@ func (w *warmer) Process(url string) {
 	}
 
 	w.mu.Lock()
-	w.Urls[url] = time.Now().Add(w.ttl).Unix()
+	w.Urls[url] = time.Now().Unix() + int64(w.ttl)
 	w.mu.Unlock()
 	// TODO: check list of urls, if has same - check TTL
 
