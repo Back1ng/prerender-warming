@@ -88,19 +88,27 @@ func (w *warmer) Refresh() {
 		go w.Process(urls, res)
 	}
 
+	wg := sync.WaitGroup{}
+
 	for url, _ := range w.Urls {
+		wg.Add(1)
 		urls <- url
 	}
 
-	for range res {
-		counter++
-		fmt.Fprintf(writer, "Warming up [%d/%d]\n", counter, len(w.Urls))
-
-		if counter == len(w.Urls) {
-			close(urls)
-			close(res)
+	go func() {
+		for range res {
+			counter++
+			fmt.Fprintf(writer, "Warming up [%d/%d]\n", counter, len(w.Urls))
+			wg.Done()
 		}
-	}
+	}()
+
+	wg.Wait()
+
+	close(urls)
+	close(res)
+
+	time.Sleep(30 * time.Millisecond)
 }
 
 func prepareUrl(url string) *http.Request {
