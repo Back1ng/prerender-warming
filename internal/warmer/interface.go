@@ -1,7 +1,7 @@
 package warmer
 
 type Warmer interface {
-	Process(url string)
+	Process(<-chan string, chan<- struct{})
 	Add(url string)
 	Refresh()
 }

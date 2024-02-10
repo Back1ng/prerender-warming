@@ -6,7 +6,8 @@ import (
 )
 
 type Configuration struct {
-	Url string
+	Url      string
+	NumProcs int
 }
 
 func New() Configuration {
@@ -20,6 +21,7 @@ func New() Configuration {
 	}
 
 	return Configuration{
-		Url: viper.Get("URL").(string),
+		Url:      viper.Get("URL").(string),
+		NumProcs: viper.Get("NUM_PROCS").(int),
 	}
 }

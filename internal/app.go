@@ -8,13 +8,10 @@ import (
 	"time"
 )
 
-var sleeping time.Duration
-
 func Run() {
-	sleeping = time.Hour * 1
-	warm := warmer.New(sleeping)
-
 	configuration := conf.New()
+
+	warm := warmer.New(time.Hour, configuration.NumProcs)
 
 	for {
 		sitemapParser := sitemapper.New()
@@ -26,6 +23,6 @@ func Run() {
 
 		warm.Refresh()
 		fmt.Println("Waiting 1 hour for refreshing...")
-		time.Sleep(sleeping)
+		time.Sleep(time.Hour)
 	}
 }
