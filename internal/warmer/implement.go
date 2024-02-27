@@ -2,10 +2,11 @@ package warmer
 
 import (
 	"fmt"
-	"github.com/gosuri/uilive"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gosuri/uilive"
 )
 
 type warmer struct {
@@ -53,22 +54,14 @@ func (w *warmer) Process(url string) {
 		}
 		resp.Body.Close()
 
-		latestResponse = time.Duration(time.Now().Sub(startReq).Seconds())
+		latestResponse = time.Duration(time.Since(startReq).Seconds())
 	}
-	// TODO: check list of urls, if has same - check TTL
-
-	// TODO: load url until he wont be low latency
-
-	// TODO: after this, save and set the TTL before needed warming
 }
 
 func (w *warmer) Refresh(urlStream <-chan string) {
-	counter := 1
-
 	for url := range urlStream {
 		fmt.Fprintf(w.writer, "Warming up. Left process: %d\n", len(urlStream))
 		w.Process(url)
-		counter++
 	}
 }
 

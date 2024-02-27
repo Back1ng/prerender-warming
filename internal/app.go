@@ -3,13 +3,14 @@ package internal
 import (
 	"flag"
 	"fmt"
-	"gitlab.com/back1ng1/prerender-warming/internal/sitemapper"
-	"gitlab.com/back1ng1/prerender-warming/internal/warmer"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"gitlab.com/back1ng1/prerender-warming/internal/sitemapper"
+	"gitlab.com/back1ng1/prerender-warming/internal/warmer"
 )
 
 var sleeping time.Duration
