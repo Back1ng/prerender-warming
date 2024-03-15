@@ -71,6 +71,7 @@ func prepareUrl(url string) *http.Request {
 		fmt.Println(err)
 	}
 	req.Header.Set("User-Agent", "googlebot")
+	req.Header.Set("x-prerender-warmer", "googlebot")
 
 	return req
 }

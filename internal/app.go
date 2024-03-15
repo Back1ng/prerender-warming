@@ -27,7 +27,7 @@ func Run() {
 	sleeping = time.Hour * 1
 
 	sitemapParser := sitemapper.New()
-	sitemapLinksStream := make(chan string, 10000)
+	sitemapLinksStream := make(chan string, 1)
 	warm := warmer.New()
 
 	done := make(chan os.Signal, 1)
