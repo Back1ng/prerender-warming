@@ -1,5 +1,5 @@
 package sitemapper
 
 type SitemapParser interface {
-	Get(url string) Sitemap
+	Get(url string) []Sitemap
 }

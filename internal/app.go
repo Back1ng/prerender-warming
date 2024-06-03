@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -24,6 +25,8 @@ func Run() {
 		log.Fatal("Count of threads cannot be less then 1.")
 	}
 
+	mu := sync.Mutex{}
+
 	sleeping = time.Hour * 1
 
 	sitemapParser := sitemapper.New()
@@ -36,12 +39,20 @@ func Run() {
 
 	go func(countLikes *int) {
 		for {
-			sitemap := sitemapParser.Get(*url)
-			sitemapLinksStream := make(chan string, len(sitemap.URL))
-			countLinks = len(sitemap.URL)
+			sitemapSlice := sitemapParser.Get(*url)
 
-			for _, url := range sitemap.URL {
-				sitemapLinksStream <- url.Loc
+			countLinks = 0
+			for _, sitemapSingle := range sitemapSlice {
+				mu.Lock()
+				countLinks += len(sitemapSingle.URL)
+				mu.Unlock()
+			}
+
+			sitemapLinksStream := make(chan string, countLinks)
+			for _, sitemapSingle := range sitemapSlice {
+				for _, url := range sitemapSingle.URL {
+					sitemapLinksStream <- url.Loc
+				}
 			}
 
 			close(sitemapLinksStream)
