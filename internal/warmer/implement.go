@@ -58,10 +58,16 @@ func (w *warmer) Process(url string) {
 	}
 }
 
-func (w *warmer) Refresh(urlStream <-chan string) {
+func (w *warmer) Refresh(urlStream <-chan string, countLinks *int) {
 	for url := range urlStream {
-		fmt.Fprintf(w.writer, "Warming up. Left process: %d\n", len(urlStream))
+		w.mu.Lock()
+		*countLinks--
+		w.mu.Unlock()
+
+		fmt.Fprintf(w.writer, "Warming up. Left process: %d\n", *countLinks)
 		w.Process(url)
+
+		<-time.After(time.Millisecond * 10)
 	}
 }
 

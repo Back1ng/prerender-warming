@@ -27,33 +27,45 @@ func Run() {
 	sleeping = time.Hour * 1
 
 	sitemapParser := sitemapper.New()
-	sitemapLinksStream := make(chan string, 1)
+	sitemapLinks := make(chan string)
 	warm := warmer.New()
+	countLinks := 0
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
+	go func(countLikes *int) {
 		for {
 			sitemap := sitemapParser.Get(*url)
-
-			warm.ResetWriter()
-			log.Printf("Waiting 1 hour for refreshing...\n\n")
-			warm.StartWriter()
+			sitemapLinksStream := make(chan string, len(sitemap.URL))
+			countLinks = len(sitemap.URL)
 
 			for _, url := range sitemap.URL {
 				sitemapLinksStream <- url.Loc
 			}
 
+			close(sitemapLinksStream)
+
+			for v := range sitemapLinksStream {
+				select {
+				case sitemapLinks <- v:
+				case <-done:
+					return
+				}
+			}
+
+			warm.ResetWriter()
+			log.Printf("Waiting 1 hour for refreshing...\n\n")
+			warm.StartWriter()
+			<-time.After(time.Millisecond * 100)
 			<-time.After(sleeping)
 		}
-	}()
+	}(&countLinks)
 
 	for i := 0; i < *threads; i++ {
-		go warm.Refresh(sitemapLinksStream)
+		go warm.Refresh(sitemapLinks, &countLinks)
 	}
 
 	<-done
 	fmt.Println("Gracefully shutdown..")
-	close(sitemapLinksStream)
 }
