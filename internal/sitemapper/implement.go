@@ -66,7 +66,6 @@ func parseMultipleSitemaps(body []byte) []Sitemap {
 			}
 
 			body, _ := io.ReadAll(gzreader)
-
 			sitemaps = append(sitemaps, parseUrlLoc(body))
 		} else {
 			resp, err := http.Get(sm.Loc)

@@ -48,11 +48,12 @@ func (w *warmer) Process(url string) {
 			fmt.Println(err)
 			continue
 		}
+
+		resp.Body.Close()
+
 		if resp.StatusCode != 200 {
-			resp.Body.Close()
 			continue
 		}
-		resp.Body.Close()
 
 		latestResponse = time.Duration(time.Since(startReq).Seconds())
 	}
