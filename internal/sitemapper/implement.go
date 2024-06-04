@@ -1,6 +1,8 @@
 package sitemapper
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/xml"
 	"io"
 	"log"
@@ -40,8 +42,6 @@ func (s *sitemapper) Get(url string) []Sitemap {
 	return []Sitemap{}
 }
 
-// todo parse xml.gz, for example: https://ekb.cian.ru/sitemap.xml
-
 func parseMultipleSitemaps(body []byte) []Sitemap {
 	var parsedXml Sitemapindex
 	xml.Unmarshal(body, &parsedXml)
@@ -49,18 +49,31 @@ func parseMultipleSitemaps(body []byte) []Sitemap {
 	sitemaps := make([]Sitemap, len(parsedXml.Sitemap))
 
 	for _, sm := range parsedXml.Sitemap {
-		resp, err := http.Get(sm.Loc)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer resp.Body.Close()
+		if sm.Loc[len(sm.Loc)-3:] == ".gz" {
+			b := new(bytes.Buffer)
+			resp, _ := http.Get(sm.Loc)
+			io.Copy(b, resp.Body)
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
+			reader := bytes.NewReader(b.Bytes())
+			gzreader, _ := gzip.NewReader(reader)
 
-		sitemaps = append(sitemaps, parseUrlLoc(body))
+			body, _ := io.ReadAll(gzreader)
+
+			sitemaps = append(sitemaps, parseUrlLoc(body))
+		} else {
+			resp, err := http.Get(sm.Loc)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			sitemaps = append(sitemaps, parseUrlLoc(body))
+		}
 	}
 
 	return sitemaps
