@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/xml"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -52,10 +53,17 @@ func parseMultipleSitemaps(body []byte) []Sitemap {
 		if sm.Loc[len(sm.Loc)-3:] == ".gz" {
 			b := new(bytes.Buffer)
 			resp, _ := http.Get(sm.Loc)
+			defer resp.Body.Close()
 			io.Copy(b, resp.Body)
 
 			reader := bytes.NewReader(b.Bytes())
-			gzreader, _ := gzip.NewReader(reader)
+			gzreader, err := gzip.NewReader(reader)
+			if err != nil {
+				if errors.Is(err, gzip.ErrHeader) {
+					sitemaps = append(sitemaps, parseUrlLoc(b.Bytes()))
+					continue
+				}
+			}
 
 			body, _ := io.ReadAll(gzreader)
 
