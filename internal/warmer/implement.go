@@ -12,18 +12,34 @@ import (
 type warmer struct {
 	client http.Client
 	mu     *sync.Mutex
-	writer *uilive.Writer
+
+	writer   *uilive.Writer
+	messages chan string
 }
 
 func New() Warmer {
+	// todo move writer to another package
 	writer := uilive.New()
 	writer.Start()
 
+	messages := make(chan string)
+	go func() {
+		for m := range messages {
+			fmt.Fprint(writer, m)
+			<-time.After(time.Millisecond * 10)
+		}
+	}()
+
 	return &warmer{
-		client: http.Client{},
-		mu:     &sync.Mutex{},
-		writer: writer,
+		client:   http.Client{},
+		mu:       &sync.Mutex{},
+		writer:   writer,
+		messages: messages,
 	}
+}
+
+func (w *warmer) Print(message string) {
+	w.messages <- message
 }
 
 func (w *warmer) ResetWriter() {
@@ -65,7 +81,7 @@ func (w *warmer) Refresh(urlStream <-chan string, countLinks *int) {
 		*countLinks--
 		w.mu.Unlock()
 
-		fmt.Fprintf(w.writer, "Warming up. Left process: %d\n", *countLinks)
+		w.messages <- fmt.Sprintf("Warming up. Left process: %d\n", *countLinks)
 		w.Process(url)
 
 		<-time.After(time.Millisecond * 10)

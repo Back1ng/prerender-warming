@@ -5,4 +5,5 @@ type Warmer interface {
 	Refresh(<-chan string, *int)
 	ResetWriter()
 	StartWriter()
+	Print(message string)
 }

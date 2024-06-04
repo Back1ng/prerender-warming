@@ -65,9 +65,7 @@ func Run() {
 				}
 			}
 
-			warm.ResetWriter()
-			log.Printf("Waiting 1 hour for refreshing...\n\n")
-			warm.StartWriter()
+			warm.Print("Waiting 1 hour for refreshing...\n\n")
 			<-time.After(time.Millisecond * 100)
 			<-time.After(sleeping)
 		}
