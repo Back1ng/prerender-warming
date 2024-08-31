@@ -52,8 +52,8 @@ func (w *warmer) StartWriter() {
 
 // Process Perform check on low latency
 func (w *warmer) Process(url string) {
-	latencyPeek := time.Second * 10
-	latestResponse := time.Second * 20
+	latencyPeek := 2
+	latestResponse := 20
 
 	for latestResponse > latencyPeek {
 		req := prepareUrl(url)
@@ -68,10 +68,15 @@ func (w *warmer) Process(url string) {
 		resp.Body.Close()
 
 		if resp.StatusCode != 200 {
+			<-time.After(time.Second * 20)
 			continue
 		}
 
-		latestResponse = time.Duration(time.Since(startReq).Seconds())
+		if int(time.Now().Sub(startReq).Seconds()) > 15 {
+			<-time.After(time.Second * 20)
+		}
+
+		latestResponse = int(time.Now().Sub(startReq).Seconds())
 	}
 }
 
